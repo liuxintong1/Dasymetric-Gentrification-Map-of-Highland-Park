@@ -1,120 +1,91 @@
 <template>
   <div id="app">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="#">LA Gentrification Dashboard</a>
-        <button 
-          class="navbar-toggler" 
-          type="button" 
-          data-bs-toggle="collapse" 
-          data-bs-target="#navbarNav"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav">
-            <li class="nav-item">
-              <router-link to="/" class="nav-link">Neighborhood Analysis</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link to="/migration" class="nav-link">Migration Flow</router-link>
-            </li>
-          </ul>
-        </div>
+    <nav class="main-nav">
+      <div class="nav-brand">
+        <h1>LA Gentrification Analysis</h1>
+      </div>
+      <div class="nav-links">
+        <router-link to="/gentrification" class="nav-link">
+          Temporal Map
+        </router-link>
+        <router-link to="/neighborhood" class="nav-link">
+          Neighborhood Analysis
+        </router-link>
+        <router-link to="/migration" class="nav-link">
+          Migration Flow
+        </router-link>
       </div>
     </nav>
 
-    <!-- Global Time Slider (controls all views) -->
-    <div class="container-fluid py-3 bg-light border-bottom">
-      <div class="row">
-        <div class="col-12">
-          <label class="form-label fw-bold">
-            Global Time Control: {{ formatQuarter(currentTime) }}
-          </label>
-          <input 
-            type="range" 
-            class="form-range" 
-            min="0" 
-            max="42"
-            v-model.number="currentTime"
-            @input="onGlobalTimeChange"
-          >
-          <div class="d-flex justify-content-between small text-muted">
-            <span>2015 Q1</span>
-            <span>2025 Q3</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Page Content -->
-    <router-view 
-      :current-time="currentTime"
-      :selected-neighborhood="selectedNeighborhood"
-      @neighborhood-change="onNeighborhoodChange"
-      @time-change="onTimeChange"
-    />
+    <main class="main-content">
+      <router-view />
+    </main>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'App',
-  
-  data() {
-    return {
-      currentTime: 42, // 2025 Q3 (end index)
-      selectedNeighborhood: 'business-led',
-      timeLabels: this.generateTimeLabels()
-    };
-  },
-  
-  methods: {
-    generateTimeLabels() {
-      const labels = [];
-      for (let i = 0; i < 43; i++) {
-        const year = 2015 + Math.floor(i / 4);
-        const quarter = (i % 4) + 1;
-        labels.push(`${year} Q${quarter}`);
-      }
-      return labels;
-    },
-    
-    formatQuarter(index) {
-      return this.timeLabels[index] || '';
-    },
-    
-    onGlobalTimeChange() {
-      // This will propagate to all child components through props
-      console.log('Global time changed to:', this.formatQuarter(this.currentTime));
-    },
-    
-    onNeighborhoodChange(neighborhoodId) {
-      this.selectedNeighborhood = neighborhoodId;
-      console.log('Selected neighborhood:', neighborhoodId);
-    },
-    
-    onTimeChange(newTime) {
-      // Update global time when child component changes it
-      this.currentTime = newTime;
-    }
-  }
-};
+<script setup>
+// No changes needed here
 </script>
 
 <style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 #app {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.router-link-active {
-  font-weight: bold;
+.main-nav {
+  background: #2c3e50;
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
-.form-range {
-  cursor: pointer;
+.nav-brand h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.router-link-active {
+  background: #3182bd;
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
 }
 </style>
