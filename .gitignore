@@ -34,3 +34,8 @@ coverage
 
 # Vitest
 __screenshots__/
+
+# Large raw data files (use processed_temporal_data.json instead)
+public/data/business_la_county_by_zip.json
+public/data/zillow_housing_by_zip.json
+public/data/la_county_zip_review_records.json
