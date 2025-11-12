@@ -11,12 +11,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix --cache",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "process-data": "node scripts/processData.js"
   },
   "dependencies": {
     "@deck.gl/core": "^9.2.2",
     "@deck.gl/layers": "^9.2.2",
     "@deck.gl/mapbox": "^9.2.2",
+    "@types/mapbox-gl": "^3.4.1",
     "bootstrap": "^5.3.8",
     "d3": "^7.9.0",
     "mapbox-gl": "^3.16.0",

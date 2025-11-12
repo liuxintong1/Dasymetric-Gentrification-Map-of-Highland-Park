@@ -15,7 +15,10 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <router-link to="/" class="nav-link">Neighborhood Analysis</router-link>
+              <router-link to="/gentrification" class="nav-link">Analysis Dashboard</router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/neighborhood" class="nav-link">Neighborhood Map</router-link>
             </li>
             <li class="nav-item">
               <router-link to="/migration" class="nav-link">Migration Flow</router-link>
