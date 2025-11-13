@@ -3,16 +3,18 @@
     <!-- Header -->
     <div class="row mb-4">
       <div class="col-12">
-        <h1 class="mb-2">LA Neighborhood Gentrification: Lead/Lag Analysis</h1>
+        <h1 class="mb-2">
+          {{ selectedZipCode ? `ZIP ${selectedZipCode}` : 'LA Neighborhood' }} Gentrification: Lead/Lag Analysis
+        </h1>
         <p class="text-muted">
-          Analyzing which comes first: business changes or housing cost increases
+          {{ selectedZipCode ? 'Real data from LA County records (2015-2022)' : 'Analyzing which comes first: business changes or housing cost increases' }}
         </p>
       </div>
     </div>
 
     <!-- Neighborhood Selector & Time Slider -->
     <div class="row mb-4">
-      <div class="col-md-6">
+      <div v-if="!selectedZipCode" class="col-md-6">
         <div class="card">
           <div class="card-body">
             <label class="form-label fw-bold">Select Neighborhood:</label>
@@ -29,6 +31,22 @@
                 {{ info.name }}
               </option>
             </select>
+          </div>
+        </div>
+      </div>
+      <div v-else class="col-md-6">
+        <div class="card bg-light">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-info-circle me-2 text-primary" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+              </svg>
+              <div>
+                <strong>Showing real data for ZIP {{ selectedZipCode }}</strong>
+                <div class="small text-muted">Click "Clear" on the map to return to synthetic examples</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -190,6 +208,10 @@ export default {
     selectedNeighborhood: {
       type: String,
       default: 'business-led'
+    },
+    selectedZipCode: {
+      type: [String, Number],
+      default: null
     }
   },
   
@@ -228,6 +250,10 @@ export default {
       // Filtered data based on time range
       filteredData: [],
       
+      // NEW: Real ZIP code data
+      realZipData: null,
+      isLoadingZipData: false,
+      
       // Analysis results
       analysisResult: {
         interpretation: '',
@@ -254,6 +280,15 @@ export default {
       console.log('Neighborhood changed from parent:', newNeighborhood);
       this.generateSampleData();
       this.updateVisualizations();
+    },
+    
+    // NEW: Watch for ZIP code changes
+    selectedZipCode: {
+      handler(newZipCode) {
+        console.log('ZIP code changed:', newZipCode);
+        this.loadRealZipData(newZipCode);
+      },
+      immediate: true
     }
   },
   
@@ -705,6 +740,83 @@ export default {
         .attr('y2', yScale(0))
         .attr('stroke', '#666')
         .attr('stroke-dasharray', '3,3');
+    },
+    
+    // NEW: Load real ZIP code data
+    async loadRealZipData(zipCode) {
+      if (!zipCode) {
+        this.realZipData = null;
+        // When ZIP is cleared, regenerate synthetic data
+        this.generateSampleData();
+        this.updateVisualizations();
+        return;
+      }
+      
+      this.isLoadingZipData = true;
+      
+      try {
+        // Load processed temporal data
+        const response = await fetch('/data/processed_temporal_data.json');
+        const allData = await response.json();
+        
+        // Get data for this specific ZIP
+        const zipData = allData[zipCode];
+        
+        if (!zipData) {
+          console.warn(`No data found for ZIP ${zipCode}`);
+          this.realZipData = null;
+          this.isLoadingZipData = false;
+          return;
+        }
+        
+        // Convert yearly data (2015-2022) to quarterly format for compatibility
+        const quarterlyData = this.convertYearlyToQuarterly(zipData, zipCode);
+        this.realZipData = quarterlyData;
+        
+        // Update the fullData with real ZIP data
+        this.fullData = quarterlyData;
+        this.filterDataByTimeRange();
+        this.updateVisualizations();
+        
+        console.log(`Loaded real data for ZIP ${zipCode}:`, quarterlyData.length, 'quarters');
+      } catch (error) {
+        console.error('Error loading ZIP data:', error);
+        this.realZipData = null;
+      }
+      
+      this.isLoadingZipData = false;
+    },
+    
+    // NEW: Convert yearly data to quarterly format
+    convertYearlyToQuarterly(yearlyData, zipCode) {
+      // Create quarterly data from 2015-2022 (8 years × 4 quarters = 32 quarters)
+      const quarters = [];
+      const years = ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022'];
+      
+      years.forEach((year, yearIndex) => {
+        const yearData = yearlyData[year];
+        
+        if (!yearData) return;
+        
+        // Create 4 quarters for this year with same values
+        // (Linear interpolation could be added for smoothness)
+        for (let q = 0; q < 4; q++) {
+          const quarterIndex = yearIndex * 4 + q;
+          const quarter = q + 1;
+          
+          quarters.push({
+            quarter: quarterIndex,
+            year: parseInt(year),
+            quarterLabel: quarter,
+            label: `${year} Q${quarter}`,
+            housingCost: yearData.housingCost || 0,
+            expensiveBusiness: yearData.businessDensity || 0,
+            businessCount: yearData.businessCount || 0
+          });
+        }
+      });
+      
+      return quarters;
     }
   }
 };

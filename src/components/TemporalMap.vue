@@ -34,6 +34,12 @@
           ↺ Reset
         </button>
       </div>
+
+      <!-- NEW: Selection Info -->
+      <div v-if="selectedZipCode" class="selection-info">
+        <span class="selected-zip">ZIP {{ selectedZipCode }} selected</span>
+        <button @click="clearSelection" class="clear-button">✕ Clear</button>
+      </div>
     </div>
 
     <!-- Legend -->
@@ -104,6 +110,17 @@ import mapboxgl from 'mapbox-gl'
 import * as d3 from 'd3'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
+// ==================== Props & Emits ====================
+const props = defineProps({
+  // Optional prop to sync year from parent component
+  currentYear: {
+    type: Number,
+    default: null
+  }
+})
+
+const emit = defineEmits(['year-change', 'zip-selected'])
+
 // ==================== Configuration ====================
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 mapboxgl.accessToken = MAPBOX_TOKEN
@@ -114,11 +131,13 @@ const INITIAL_ZOOM = 9
 // ==================== State Management ====================
 const mapContainer = ref(null)
 const map = ref(null)
-const currentYear = ref(2015)
+// Initialize with prop value if provided, otherwise default to 2015
+const currentYear = ref(props.currentYear || 2015)
 const isLoading = ref(true)
 const isPlaying = ref(false)
 const processedMapData = ref({})
 const geoJsonData = ref(null)
+const selectedZipCode = ref(null)
 
 let playbackInterval = null
 let overlayCanvas = null
@@ -288,6 +307,25 @@ function setupMapInteractions() {
     if (popup) {
       popup.remove()
       popup = null
+    }
+  })
+
+  // NEW: Add click handler for ZIP selection
+  map.value.on('click', 'housing-choropleth', (e) => {
+    if (e.features && e.features.length > 0) {
+      const zipCode = e.features[0].properties.ZIPCODE
+      
+      // Toggle selection: if clicking same ZIP, deselect it
+      if (selectedZipCode.value === zipCode) {
+        selectedZipCode.value = null
+        emit('zip-selected', null)
+      } else {
+        selectedZipCode.value = zipCode
+        emit('zip-selected', zipCode)
+      }
+      
+      // Update visual highlight
+      updateZipHighlight()
     }
   })
 }
@@ -591,6 +629,39 @@ function updateMap(year) {
   updateOverlayPatterns()
 }
 
+// NEW: Function to highlight selected ZIP
+function updateZipHighlight() {
+  if (!map.value) return
+  
+  if (selectedZipCode.value) {
+    // Highlight selected ZIP with different style
+    map.value.setPaintProperty('zip-boundaries', 'line-color', [
+      'case',
+      ['==', ['get', 'ZIPCODE'], selectedZipCode.value],
+      '#ff6b35', // Orange for selected
+      '#ffffff'  // White for others
+    ])
+    
+    map.value.setPaintProperty('zip-boundaries', 'line-width', [
+      'case',
+      ['==', ['get', 'ZIPCODE'], selectedZipCode.value],
+      4, // Thicker for selected
+      1.5
+    ])
+  } else {
+    // Reset to default
+    map.value.setPaintProperty('zip-boundaries', 'line-color', '#ffffff')
+    map.value.setPaintProperty('zip-boundaries', 'line-width', 1.5)
+  }
+}
+
+// NEW: Function to clear selection
+function clearSelection() {
+  selectedZipCode.value = null
+  emit('zip-selected', null)
+  updateZipHighlight()
+}
+
 // ==================== Playback Controls ====================
 
 function togglePlayback() {
@@ -627,8 +698,23 @@ function resetYear() {
 
 // ==================== Watchers ====================
 
-watch(currentYear, (newYear) => {
-  updateMap(newYear)
+// Watch for internal year changes (from slider/playback) and emit to parent
+watch(currentYear, (newYear, oldYear) => {
+  if (newYear !== oldYear) {
+    updateMap(newYear)
+    emit('year-change', newYear)
+  }
+})
+
+// Watch for prop changes from parent (when charts update the year)
+watch(() => props.currentYear, (newYear) => {
+  if (newYear !== null && newYear !== currentYear.value) {
+    // Parent wants to change the year, update our local state
+    // Make sure it's within valid range (2015-2022)
+    if (newYear >= 2015 && newYear <= 2022) {
+      currentYear.value = newYear
+    }
+  }
 })
 
 // ==================== Lifecycle Hooks ====================
@@ -895,5 +981,39 @@ onBeforeUnmount(() => {
   margin-top: 20px;
   font-size: 16px;
   color: #555;
+}
+
+/* NEW: Selection info styles */
+.selection-info {
+  margin-top: 15px;
+  padding: 10px;
+  background: #fff3cd;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #ffc107;
+}
+
+.selected-zip {
+  font-weight: 600;
+  color: #856404;
+  font-size: 14px;
+}
+
+.clear-button {
+  padding: 4px 12px;
+  background: #fff;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #856404;
+  transition: all 0.2s;
+}
+
+.clear-button:hover {
+  background: #ffc107;
+  color: #fff;
 }
 </style>

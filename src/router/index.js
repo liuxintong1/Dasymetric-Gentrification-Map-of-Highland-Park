@@ -1,21 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MigrationFlow from '../views/MigrationFlow.vue'
 import NeighborhoodAnalysis from '../views/NeighborhoodAnalysis.vue'
-import GentrificationAnalysis from '../views/GentrificationAnalysis.vue'
+import MigrationFlow from '../views/MigrationFlow.vue'
 
 const routes = [
   {
     path: '/',
-    redirect: '/gentrification' // Default landing page
-  },
-  {
-    path: '/gentrification',
-    name: 'GentrificationAnalysis',
-    component: GentrificationAnalysis,
-    meta: { title: 'LA Gentrification - Analysis' }
-  },
-  {
-    path: '/neighborhood',
     name: 'NeighborhoodAnalysis',
     component: NeighborhoodAnalysis,
     meta: { title: 'LA Gentrification - Neighborhood Analysis' }

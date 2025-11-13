@@ -1,43 +1,26 @@
 <template>
-  <div class="container-fluid">
-    <div class="row vh-100">
-      <!-- Left Side: Mapbox Map (60% width) -->
-      <div class="col-lg-7 p-0 position-relative">
-        <div class="map-container">
-          <!-- Mapbox map will go here -->
-          <div ref="mapContainer" class="w-100 h-100"></div>
-          
-          <!-- Map Legend (overlay on map) -->
-          <div class="map-legend">
-            <h6 class="mb-2">Gentrification Pattern</h6>
-            <div class="legend-item">
-              <span class="legend-color" style="background: #ef4444;"></span>
-              Business-Led
-            </div>
-            <div class="legend-item">
-              <span class="legend-color" style="background: #3b82f6;"></span>
-              Housing-Led
-            </div>
-            <div class="legend-item">
-              <span class="legend-color" style="background: #8b5cf6;"></span>
-              Simultaneous
-            </div>
-            <div class="legend-item">
-              <span class="legend-color" style="background: #6b7280;"></span>
-              Stable
-            </div>
-          </div>
-        </div>
+  <div class="container-fluid p-0">
+    <div class="row g-0 vh-100">
+      <!-- Left Side: Joann's Mapbox Map (60% width) -->
+      <div class="col-lg-7 map-column">
+        <TemporalMap 
+          :current-year="currentYear"
+          @year-change="onYearChange"
+          @zip-selected="onZipSelected"
+        />
       </div>
 
-      <!-- Right Side: Analysis Panel (40% width) -->
-      <div class="col-lg-5 p-0 overflow-auto" style="max-height: 100vh;">
-        <GentrificationAnalysis 
-          :current-time="currentTime"
-          :selected-neighborhood="localNeighborhood"
-          @neighborhood-change="onNeighborhoodChange"
-          @time-change="onTimeChange"
-        />
+      <!-- Right Side: Your Analysis Charts (40% width) -->
+      <div class="col-lg-5 analysis-column">
+        <div class="analysis-container">
+          <GentrificationAnalysis 
+            :current-time="currentTimeIndex"
+            :selected-neighborhood="selectedNeighborhood"
+            :selected-zip-code="selectedZipCode"
+            @neighborhood-change="onNeighborhoodChange"
+            @time-change="onTimeChange"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -45,287 +28,148 @@
 
 <script>
 import GentrificationAnalysis from '../components/GentrificationAnalysis.vue';
-// import mapboxgl from 'mapbox-gl'; // Uncomment when ready to add Mapbox
+import TemporalMap from '../components/TemporalMap.vue';
 
 export default {
   name: 'NeighborhoodAnalysis',
   
   components: {
-    GentrificationAnalysis
-  },
-  
-  props: {
-    currentTime: {
-      type: Number,
-      default: 42
-    },
-    selectedNeighborhood: {
-      type: String,
-      default: 'business-led'
-    }
+    GentrificationAnalysis,
+    TemporalMap
   },
   
   data() {
     return {
-      localNeighborhood: this.selectedNeighborhood,
-      map: null
+      // Current year for the map (2015-2022)
+      currentYear: 2015,
+      
+      // Selected neighborhood from charts
+      selectedNeighborhood: 'business-led',
+      
+      // Time index for quarterly data (0-43 for 2015 Q1 to 2025 Q4)
+      currentTimeIndex: 0,
+      
+      // NEW: Selected ZIP code from map
+      selectedZipCode: null
     };
   },
   
-  mounted() {
-    this.initializeMap();
-  },
-  
-  watch: {
-    currentTime(newTime) {
-      // Update map layers based on time
-      this.updateMapForTime(newTime);
-    },
-    
-    selectedNeighborhood(newNeighborhood) {
-      this.localNeighborhood = newNeighborhood;
-      // Highlight neighborhood on map
-      this.highlightNeighborhood(newNeighborhood);
-    }
-  },
-  
   methods: {
-    initializeMap() {
-      // TODO: Initialize Mapbox map
-      // This is a placeholder - add your Mapbox initialization here
+    /**
+     * Handle year changes from the map's timeline slider
+     * Convert year to quarterly index for the charts
+     */
+    onYearChange(year) {
+      this.currentYear = year;
       
-      /*
-      mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN';
+      // Convert year to quarterly index (each year has 4 quarters)
+      // Year 2015 → index 0-3
+      // Year 2016 → index 4-7, etc.
+      const baseYear = 2015;
+      const yearOffset = year - baseYear;
+      const quarterlyIndex = yearOffset * 4; // Start of that year (Q1)
       
-      this.map = new mapboxgl.Map({
-        container: this.$refs.mapContainer,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: [-118.2437, 34.0522], // LA center
-        zoom: 10
-      });
+      this.currentTimeIndex = quarterlyIndex;
       
-      this.map.on('load', () => {
-        this.addNeighborhoodLayers();
-        this.setupMapInteractions();
-      });
-      */
-      
-      // For now, show placeholder
-      const container = this.$refs.mapContainer;
-      container.innerHTML = `
-        <div class="d-flex align-items-center justify-content-center h-100 bg-light">
-          <div class="text-center">
-            <h3 class="text-muted">Mapbox Map Goes Here</h3>
-            <p class="text-muted">
-              Initialize your Mapbox map in the initializeMap() method<br/>
-              Add dual-layer choropleth with housing costs + business density
-            </p>
-            <div class="mt-4">
-              <p class="small text-muted">Expected Layers:</p>
-              <ul class="list-unstyled small text-muted">
-                <li>• Choropleth: Housing cost (color intensity)</li>
-                <li>• Overlay: Business density (hatched patterns)</li>
-                <li>• Interactive: Click to select neighborhood</li>
-                <li>• Temporal: Updates with time slider</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      `;
+      console.log(`Map year changed to ${year} → Chart index ${quarterlyIndex}`);
     },
     
-    addNeighborhoodLayers() {
-      // TODO: Add your neighborhood GeoJSON layers
+    /**
+     * Handle time changes from the chart's global slider
+     * Convert quarterly index to year for the map
+     */
+    onTimeChange(timeIndex) {
+      this.currentTimeIndex = timeIndex;
       
-      /*
-      // Example structure:
-      this.map.addSource('neighborhoods', {
-        type: 'geojson',
-        data: '/data/la-neighborhoods.geojson'
-      });
+      // Convert quarterly index to year
+      const baseYear = 2015;
+      const year = baseYear + Math.floor(timeIndex / 4);
       
-      // Housing cost choropleth layer
-      this.map.addLayer({
-        id: 'housing-choropleth',
-        type: 'fill',
-        source: 'neighborhoods',
-        paint: {
-          'fill-color': [
-            'interpolate',
-            ['linear'],
-            ['get', 'housingCost'],
-            0, '#f0f9ff',
-            50, '#0ea5e9',
-            100, '#1e40af'
-          ],
-          'fill-opacity': 0.7
-        }
-      });
-      
-      // Business density overlay (using patterns)
-      this.map.addLayer({
-        id: 'business-overlay',
-        type: 'fill',
-        source: 'neighborhoods',
-        paint: {
-          'fill-pattern': [
-            'step',
-            ['get', 'businessDensity'],
-            'pattern-low',
-            33, 'pattern-medium',
-            66, 'pattern-high'
-          ],
-          'fill-opacity': 0.5
-        }
-      });
-      */
-    },
-    
-    setupMapInteractions() {
-      // TODO: Setup click handlers for neighborhood selection
-      
-      /*
-      this.map.on('click', 'housing-choropleth', (e) => {
-        if (e.features.length > 0) {
-          const neighborhoodId = e.features[0].properties.id;
-          this.onNeighborhoodChange(neighborhoodId);
-        }
-      });
-      
-      // Change cursor on hover
-      this.map.on('mouseenter', 'housing-choropleth', () => {
-        this.map.getCanvas().style.cursor = 'pointer';
-      });
-      
-      this.map.on('mouseleave', 'housing-choropleth', () => {
-        this.map.getCanvas().style.cursor = '';
-      });
-      */
-    },
-    
-    updateMapForTime(timeIndex) {
-      // TODO: Update map layers to show data for the selected time period
-      
-      /*
-      // Example: Update the filter on your layers
-      const quarter = this.getQuarterFromIndex(timeIndex);
-      
-      this.map.setFilter('housing-choropleth', [
-        '==',
-        ['get', 'quarter'],
-        quarter
-      ]);
-      
-      this.map.setFilter('business-overlay', [
-        '==',
-        ['get', 'quarter'],
-        quarter
-      ]);
-      */
-      
-      console.log('Update map for time index:', timeIndex);
-    },
-    
-    highlightNeighborhood(neighborhoodId) {
-      // TODO: Highlight selected neighborhood on map
-      
-      /*
-      // Remove previous highlight
-      if (this.map.getLayer('neighborhood-highlight')) {
-        this.map.removeLayer('neighborhood-highlight');
+      // Only update map if year changed (to avoid excessive updates)
+      if (year !== this.currentYear && year >= 2015 && year <= 2022) {
+        this.currentYear = year;
+        console.log(`Chart index ${timeIndex} → Map year ${year}`);
       }
-      
-      // Add new highlight
-      this.map.addLayer({
-        id: 'neighborhood-highlight',
-        type: 'line',
-        source: 'neighborhoods',
-        paint: {
-          'line-color': '#ff0000',
-          'line-width': 3
-        },
-        filter: ['==', ['get', 'id'], neighborhoodId]
-      });
-      
-      // Fly to neighborhood
-      const feature = this.getNeighborhoodFeature(neighborhoodId);
-      if (feature) {
-        const bbox = turf.bbox(feature);
-        this.map.fitBounds(bbox, { padding: 50 });
-      }
-      */
-      
-      console.log('Highlight neighborhood:', neighborhoodId);
     },
     
+    /**
+     * Handle neighborhood selection changes from the charts
+     */
     onNeighborhoodChange(neighborhoodId) {
-      this.localNeighborhood = neighborhoodId;
-      this.$emit('neighborhood-change', neighborhoodId);
+      this.selectedNeighborhood = neighborhoodId;
+      console.log('Selected neighborhood:', neighborhoodId);
+      
+      // TODO: In future, you could highlight this neighborhood on the map
+      // by passing the selection to TemporalMap via props
     },
     
-    onTimeChange(newTime) {
-      // Bubble up the time change event to App.vue
-      this.$emit('time-change', newTime);
-    },
-    
-    getQuarterFromIndex(index) {
-      const year = 2015 + Math.floor(index / 4);
-      const quarter = (index % 4) + 1;
-      return `${year}-Q${quarter}`;
-    }
-  },
-  
-  beforeUnmount() {
-    // Clean up map
-    if (this.map) {
-      this.map.remove();
+    /**
+     * Handle ZIP code selection from the map
+     */
+    onZipSelected(zipCode) {
+      this.selectedZipCode = zipCode;
+      console.log('Selected ZIP:', zipCode);
+      
+      // When a ZIP is selected, the charts will automatically update
+      // through the prop binding
     }
   }
 };
 </script>
 
 <style scoped>
-.map-container {
-  position: relative;
-  width: 100%;
+/* Remove all padding/margins for full-screen split layout */
+.container-fluid {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.row {
+  margin: 0 !important;
+}
+
+/* Map column takes up left side */
+.map-column {
+  padding: 0 !important;
   height: 100vh;
+  overflow: hidden;
+}
+
+/* Analysis column takes up right side */
+.analysis-column {
+  padding: 0 !important;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: #f8f9fa;
 }
 
-.map-legend {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  z-index: 1;
+.analysis-container {
+  height: 100%;
+  padding: 0;
 }
 
-.map-legend h6 {
-  font-size: 14px;
-  font-weight: bold;
-  margin: 0;
+/* Ensure no gaps between columns */
+.col-lg-7, .col-lg-5 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  margin-top: 8px;
-  font-size: 13px;
+/* Hide scrollbar for analysis column but keep functionality */
+.analysis-column::-webkit-scrollbar {
+  width: 8px;
 }
 
-.legend-color {
-  width: 20px;
-  height: 20px;
-  border-radius: 3px;
-  margin-right: 8px;
-  border: 1px solid #ccc;
+.analysis-column::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
 
-.overflow-auto {
-  overflow-y: auto;
-  overflow-x: hidden;
+.analysis-column::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.analysis-column::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>
