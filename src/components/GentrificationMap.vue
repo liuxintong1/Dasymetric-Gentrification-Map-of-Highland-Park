@@ -2,14 +2,19 @@
 import { ref, onMounted } from 'vue'
 import L from 'leaflet'
 import * as d3 from 'd3'
+import ZoningLayer from './ZoningLayer.vue'
+import ZoningLegend from './ZoningLegend.vue'
 
 // Reference to the map container DOM element
 const mapContainer = ref(null)
+const map = ref(null)
+const showZoning = ref(true)
+const showBoundary = ref(true)
 
 // Initialize the Leaflet map on component mount
 onMounted(async () => {
   // Initialize Leaflet map centered on Highland Park, LA
-  const map = L.map(mapContainer.value, {
+  map.value = L.map(mapContainer.value, {
     center: [34.115, -118.188],
     zoom: 14,
     minZoom: 13,
@@ -17,54 +22,52 @@ onMounted(async () => {
     zoomControl: true
   })
 
-  // Add OpenStreetMap tile layer
+  // Add base map tile layer
+  // Option 1: OpenStreetMap (detailed)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
-  }).addTo(map)
+  }).addTo(map.value)
+
+  // Option 2: CartoDB Positron (minimal, light - UNCOMMENT TO USE)
+  // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+  //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  //   maxZoom: 19
+  // }).addTo(map.value)
+
+  // Option 3: CartoDB Dark Matter (minimal, dark - UNCOMMENT TO USE)
+  // L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+  //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  //   maxZoom: 19
+  // }).addTo(map.value)
 
   try {
-    // Load the full LA neighborhoods GeoJSON
-    const response = await fetch('/highland.geojson')
-    const allNeighborhoods = await response.json()
+    // Load Highland Park boundary only
+    const response = await fetch('/highland_park_only.geojson')
+    const highlandParkData = await response.json()
 
-    // Filter to get ONLY Highland Park
-    const highlandParkFeature = allNeighborhoods.features.find(
-      feature => feature.properties.name === "Highland Park"
-    )
-
-    if (!highlandParkFeature) {
-      throw new Error('Highland Park not found in GeoJSON.')
-    }
-
-    // Create a new GeoJSON with only Highland Park
-    const highlandParkOnly = {
-      type: "FeatureCollection",
-      features: [highlandParkFeature]
-    }
-
-    // Create a Leaflet GeoJSON layer for Highland Park boundary only
-    const boundaryLayer = L.geoJSON(highlandParkOnly, {
+    // Create boundary layer for Highland Park
+    const boundaryLayer = L.geoJSON(highlandParkData, {
       style: {
         color: '#2c3e50',
         weight: 3,
         fillOpacity: 0,
         dashArray: '5, 5'
       }
-    }).addTo(map)
+    }).addTo(map.value)
 
-    // Get the bounds from Highland Park only
+    // Get the bounds from Highland Park
     const bounds = boundaryLayer.getBounds()
     
     // Set max bounds to lock the map to Highland Park only
-    map.setMaxBounds(bounds.pad(0.1))
-    map.options.maxBoundsViscosity = 1.0
+    map.value.setMaxBounds(bounds.pad(0.1))
+    map.value.options.maxBoundsViscosity = 1.0
 
     // Fit the map perfectly to Highland Park
-    map.fitBounds(bounds, { padding: [20, 20] })
+    map.value.fitBounds(bounds, { padding: [20, 20] })
 
     // Create SVG overlay for masking everything outside Highland Park
-    const svg = d3.select(map.getPanes().overlayPane)
+    const svg = d3.select(map.value.getPanes().overlayPane)
       .append('svg')
       .attr('class', 'highland-park-mask')
       .style('position', 'absolute')
@@ -77,9 +80,9 @@ onMounted(async () => {
 
     // Function to update the mask on zoom/pan
     function updateMask() {
-      const mapBounds = map.getBounds()
-      const topLeft = map.latLngToLayerPoint(mapBounds.getNorthWest())
-      const bottomRight = map.latLngToLayerPoint(mapBounds.getSouthEast())
+      const mapBounds = map.value.getBounds()
+      const topLeft = map.value.latLngToLayerPoint(mapBounds.getNorthWest())
+      const bottomRight = map.value.latLngToLayerPoint(mapBounds.getSouthEast())
 
       svg
         .attr('width', bottomRight.x - topLeft.x)
@@ -93,7 +96,7 @@ onMounted(async () => {
       const geoPath = d3.geoPath().projection(
         d3.geoTransform({
           point: function(lng, lat) {
-            const point = map.latLngToLayerPoint(new L.LatLng(lat, lng))
+            const point = map.value.latLngToLayerPoint(new L.LatLng(lat, lng))
             this.stream.point(point.x, point.y)
           }
         })
@@ -103,7 +106,7 @@ onMounted(async () => {
       g.selectAll('path').remove()
 
       // Get map pixel bounds for creating outer rectangle
-      const pixelBounds = map.getPixelBounds()
+      const pixelBounds = map.value.getPixelBounds()
       const padding = 5000
 
       // Create coordinates for outer world rectangle
@@ -113,11 +116,11 @@ onMounted(async () => {
         [pixelBounds.max.x + padding, pixelBounds.max.y + padding],
         [pixelBounds.min.x - padding, pixelBounds.max.y + padding]
       ].map(p => {
-        const latlng = map.layerPointToLatLng(L.point(p[0], p[1]))
+        const latlng = map.value.layerPointToLatLng(L.point(p[0], p[1]))
         return [latlng.lng, latlng.lat]
       })
 
-      // Draw outer rectangle covering everything
+      // Draw outer rectangle with VERY OPAQUE GRAY to completely hide outside
       g.append('path')
         .datum({
           type: 'Feature',
@@ -127,50 +130,89 @@ onMounted(async () => {
           }
         })
         .attr('d', geoPath)
-        .attr('fill', 'white')
-        .attr('fill-opacity', 0.88)
+        .attr('fill', '#8a8a8a')  // Medium-dark gray
+        .attr('fill-opacity', 0.97)  // Almost solid - hides everything
         .attr('class', 'outer-mask')
 
-      // Draw Highland Park boundary
-      g.append('path')
-        .datum(highlandParkOnly)
-        .attr('d', geoPath)
-        .attr('fill', 'transparent')
-        .attr('stroke', '#2c3e50')
-        .attr('stroke-width', 3)
-        .attr('stroke-dasharray', '8, 4')
-        .attr('class', 'boundary-line')
+      // Draw Highland Park boundary on top if visible
+      if (showBoundary.value) {
+        g.append('path')
+          .datum(highlandParkData)
+          .attr('d', geoPath)
+          .attr('fill', 'transparent')
+          .attr('stroke', '#2c3e50')
+          .attr('stroke-width', 3)
+          .attr('stroke-dasharray', '8, 4')
+          .attr('class', 'boundary-line')
+      }
     }
 
     // Update mask on map move/zoom
-    map.on('moveend zoom', updateMask)
+    map.value.on('moveend zoom', updateMask)
     updateMask()
 
     // Add popup to boundary
     boundaryLayer.bindPopup('<b>Highland Park</b><br>Los Angeles, CA<br><small>Neighborhood boundary</small>')
 
+    // Store boundary layer for toggling
+    map.value._boundaryLayer = boundaryLayer
+    map.value._updateMask = updateMask
+
   } catch (error) {
     console.error('Error loading Highland Park:', error)
-    alert('Error loading Highland Park boundary. Please check that highland.geojson is in the public folder.')
+    alert('Error loading Highland Park boundary. Please check that highland_park_only.geojson is in the public folder.')
   }
-
-  // TODO: Add D3 data visualization layers here
-  // D3 is available and ready for use with the variable 'd3'
-
-  // TODO: Implement cleanup on component unmount
-  // onUnmounted(() => {
-  //   if (map) {
-  //     map.remove()
-  //   }
-  // })
 })
+
+// Toggle boundary visibility
+function toggleBoundary() {
+  showBoundary.value = !showBoundary.value
+  if (map.value._updateMask) {
+    map.value._updateMask()
+  }
+}
 </script>
 
 <template>
   <div class="map-wrapper">
     <div ref="mapContainer" class="map-container"></div>
+    
+    <!-- Zoning Layer (renders on top of base map) -->
+    <ZoningLayer 
+      v-if="map" 
+      :map="map" 
+      :visible="showZoning"
+    />
+    
+    <!-- Zoning Legend -->
+    <ZoningLegend 
+      :visible="showZoning"
+      classification="zoning"
+    />
+    
+    <!-- Layer Controls -->
+    <div class="layer-controls">
+      <h4>Map Layers</h4>
+      <label class="layer-toggle">
+        <input 
+          type="checkbox" 
+          v-model="showZoning"
+        />
+        <span>Show Zoning</span>
+      </label>
+      <label class="layer-toggle">
+        <input 
+          type="checkbox" 
+          v-model="showBoundary"
+          @change="toggleBoundary"
+        />
+        <span>Show Boundary</span>
+      </label>
+    </div>
+    
+    <!-- Info Badge -->
     <div class="map-info">
-      <p>📍 Highland Park Only</p>
+      <p>📍 Highland Park</p>
       <p class="map-info-sub">Los Angeles, CA</p>
     </div>
   </div>
@@ -187,6 +229,46 @@ onMounted(async () => {
 .map-container {
   width: 100%;
   height: 100%;
+}
+
+.layer-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  min-width: 160px;
+}
+
+.layer-controls h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.layer-toggle:last-child {
+  margin-bottom: 0;
+}
+
+.layer-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
 }
 
 .map-info {
