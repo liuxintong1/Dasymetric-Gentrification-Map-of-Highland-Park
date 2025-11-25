@@ -5,16 +5,16 @@
 ## PROJECT INFORMATION
 
 - Project title:
-- Group name:
+- Group name: Team 14
 - Team members:
-  1. member-name member-username@usc.edu
-  2. member-name member-username@usc.edu
-  3. member-name member-username@usc.edu
-  4. member-name member-username@usc.edu
+  1. Omar Nava onava@usc.edu
+  2. Xintong (Tracy) Liu xliu2360@usc.edu
+  3. Chi-Fang (Joann) Cheng chifang@usc.edu
+  4. YuanYuan Xue xueyuany@usc.edu
 
 ## ARTIFACTS
 
-- [Paper PDF](<article-pdf-url>) and [Paper Overleaf URL](<overleaf-article-url>)
+- [Paper PDF](<article-pdf-url>) and [Paper Overleaf URL](<https://www.overleaf.com/read/jndfrqwqrjbn#34e5dc>)
 - [Demonstration URL](<demo-url>)
 - [Presentation URL](<presentation-pdf-url>)
 - [YouTube video Link](<youtube-video-url>)
