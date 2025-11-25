@@ -1,5 +1,21 @@
 # DSCI 554 Group Project
 
+
+# Project Progress Update
+
+## ✅ Completed
+- Completed building footprint map  
+- Acquired Highland Park gentrification map  
+- Vue application structure fully set up  
+
+## 🔧 Next Steps
+- Integrate building footprints with the gentrification map  
+- Apply the gentrification map’s color encoding to classify and color-code commercial buildings  
+- Add **pricing categorization** to the building footprints.
+- Build a Vue component to render the combined, color-coded map  
+- Insert and connect this component into the main Vue application page  
+
+
 ## Description
 
 In your final project, your team will produce a **demo paper** as if submitted to a data visualization conference. For this, you will write a **research paper**, build and deploy a **demo**, create a **video**, and deliver a presentation to the class. The goal of the project is to design an interactive visualization system or tool that addresses a unique data-driven problem and that addresses visualization challenges. As such, this project shows how you can apply class concepts to solve visualization challenges and communicate your contributions professionally.
