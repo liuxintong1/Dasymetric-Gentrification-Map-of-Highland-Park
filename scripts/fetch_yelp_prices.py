@@ -39,7 +39,7 @@ PROJECT_ROOT = SCRIPT_DIR.parent
 # ==============================
 # CONFIGURATION
 # ==============================
-YELP_API_KEY = "9IspzF3VuW0yDv_JCdtSRqMfz9MUGag7PO6X1YMG3DniWhqQFURtBwNjPAmuCj9nxDr-GD7_GHP8xvm5V6KPTzkBAXIydERrgSKKxbed2D086KjQf2EdHkykXHwnaXYx"
+YELP_API_KEY = "API_KEY"
 
 # File paths (using absolute paths based on script location)
 INPUT_FILE = PROJECT_ROOT / "public" / "highland_park_commercial_buildings_footprint.geojson"

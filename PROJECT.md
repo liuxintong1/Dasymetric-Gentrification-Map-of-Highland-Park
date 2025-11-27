@@ -2,6 +2,20 @@
 
 **DO NOT CHANGE THE FORMATTING AND DO NOT ADD ANY OTHER INFORMATION BESIDES WHAT IS REQUESTED**
 
+# Project Progress Update
+
+## ✅ Completed
+- Completed building footprint map  
+- Acquired Highland Park gentrification map  
+- Vue application structure fully set up  
+
+## 🔧 Next Steps
+- Integrate building footprints with the gentrification map  
+- Apply the gentrification map’s color encoding to classify and color-code commercial buildings  
+- Add **pricing categorization** to the building footprints.
+- Build a Vue component to render the combined, color-coded map  
+- Insert and connect this component into the main Vue application page  
+
 ## PROJECT INFORMATION
 
 - Project title:
