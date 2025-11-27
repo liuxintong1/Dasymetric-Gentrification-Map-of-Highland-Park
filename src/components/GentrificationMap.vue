@@ -3,15 +3,15 @@ import { ref, onMounted } from "vue";
 import L from "leaflet";
 import * as d3 from "d3";
 import ZoningLayer from "./ZoningLayer.vue";
-import ZoningLegend from "./ZoningLegend.vue";
-import CommercialBuildingsLayer from "./CommercialBuildingsLayer.vue";
+import BuildingsWithPricesLayer from "./BuildingsWithPricesLayer.vue";
+import Legend from "./Legend.vue";
 
 // Reference to the map container DOM element
 const mapContainer = ref(null);
 const map = ref(null);
 const showZoning = ref(true);
 const showBoundary = ref(true);
-const showCommercialBuildings = ref(false); // New: toggle for commercial buildings
+const showPriceBuildings = ref(true);
 
 // Initialize the Leaflet map on component mount
 onMounted(async () => {
@@ -25,24 +25,11 @@ onMounted(async () => {
   });
 
   // Add base map tile layer
-  // Option 1: OpenStreetMap (detailed)
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
   }).addTo(map.value);
-
-  // Option 2: CartoDB Positron (minimal, light - UNCOMMENT TO USE)
-  // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-  //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  //   maxZoom: 19
-  // }).addTo(map.value)
-
-  // Option 3: CartoDB Dark Matter (minimal, dark - UNCOMMENT TO USE)
-  // L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
-  //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  //   maxZoom: 19
-  // }).addTo(map.value)
 
   try {
     // Load Highland Park boundary only
@@ -185,18 +172,18 @@ function toggleBoundary() {
   <div class="map-wrapper">
     <div ref="mapContainer" class="map-container"></div>
 
-    <!-- Zoning Layer (renders on top of base map) -->
+    <!-- Zoning Layer (Joann's existing layer) -->
     <ZoningLayer v-if="map" :map="map" :visible="showZoning" />
 
-    <!-- Commercial Buildings Layer (NEW) -->
-    <CommercialBuildingsLayer
+    <!-- Commercial Buildings WITH Price Data -->
+    <BuildingsWithPricesLayer
       v-if="map"
       :map="map"
-      :visible="showCommercialBuildings"
+      :visible="showPriceBuildings"
     />
 
-    <!-- Zoning Legend -->
-    <ZoningLegend :visible="showZoning" classification="zoning" />
+    <!-- Combined Legend (replaces separate legends) -->
+    <Legend :show-zoning="showZoning" :show-price="showPriceBuildings" />
 
     <!-- Layer Controls -->
     <div class="layer-controls">
@@ -206,8 +193,8 @@ function toggleBoundary() {
         <span>Show Zoning</span>
       </label>
       <label class="layer-toggle">
-        <input type="checkbox" v-model="showCommercialBuildings" />
-        <span>🏢 Commercial Buildings</span>
+        <input type="checkbox" v-model="showPriceBuildings" />
+        <span>Commercial Buildings</span>
       </label>
       <label class="layer-toggle">
         <input
