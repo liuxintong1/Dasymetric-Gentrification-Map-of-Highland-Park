@@ -4,14 +4,15 @@ import L from "leaflet";
 import * as d3 from "d3";
 import ZoningLayer from "./ZoningLayer.vue";
 import BuildingsWithPricesLayer from "./BuildingsWithPricesLayer.vue";
+import GentrificationTractsLayer from "./GentrificationTractsLayer.vue";
 import Legend from "./Legend.vue";
 
 // Reference to the map container DOM element
 const mapContainer = ref(null);
 const map = ref(null);
 const showZoning = ref(true);
-const showBoundary = ref(true);
 const showPriceBuildings = ref(true);
+const showGentrificationTracts = ref(true);
 
 // Initialize the Leaflet map on component mount
 onMounted(async () => {
@@ -24,11 +25,12 @@ onMounted(async () => {
     zoomControl: true,
   });
 
-  // Add base map tile layer
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  // Add base map tile layer - CartoDB Positron (clean, minimal style)
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
     attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 20,
   }).addTo(map.value);
 
   try {
@@ -36,18 +38,9 @@ onMounted(async () => {
     const response = await fetch("/highland_park_only.geojson");
     const highlandParkData = await response.json();
 
-    // Create boundary layer for Highland Park
-    const boundaryLayer = L.geoJSON(highlandParkData, {
-      style: {
-        color: "#2c3e50",
-        weight: 3,
-        fillOpacity: 0,
-        dashArray: "5, 5",
-      },
-    }).addTo(map.value);
-
-    // Get the bounds from Highland Park
-    const bounds = boundaryLayer.getBounds();
+    // Get the bounds from Highland Park (using temporary layer for bounds calculation)
+    const tempBoundaryLayer = L.geoJSON(highlandParkData);
+    const bounds = tempBoundaryLayer.getBounds();
 
     // Set max bounds to lock the map to Highland Park only
     map.value.setMaxBounds(bounds.pad(0.1));
@@ -125,32 +118,11 @@ onMounted(async () => {
         .attr("fill", "#8a8a8a") // Medium-dark gray
         .attr("fill-opacity", 0.97) // Almost solid - hides everything
         .attr("class", "outer-mask");
-
-      // Draw Highland Park boundary on top if visible
-      if (showBoundary.value) {
-        g.append("path")
-          .datum(highlandParkData)
-          .attr("d", geoPath)
-          .attr("fill", "transparent")
-          .attr("stroke", "#2c3e50")
-          .attr("stroke-width", 3)
-          .attr("stroke-dasharray", "8, 4")
-          .attr("class", "boundary-line");
-      }
     }
 
     // Update mask on map move/zoom
     map.value.on("moveend zoom", updateMask);
     updateMask();
-
-    // Add popup to boundary
-    boundaryLayer.bindPopup(
-      "<b>Highland Park</b><br>Los Angeles, CA<br><small>Neighborhood boundary</small>"
-    );
-
-    // Store boundary layer for toggling
-    map.value._boundaryLayer = boundaryLayer;
-    map.value._updateMask = updateMask;
   } catch (error) {
     console.error("Error loading Highland Park:", error);
     alert(
@@ -159,13 +131,6 @@ onMounted(async () => {
   }
 });
 
-// Toggle boundary visibility
-function toggleBoundary() {
-  showBoundary.value = !showBoundary.value;
-  if (map.value._updateMask) {
-    map.value._updateMask();
-  }
-}
 </script>
 
 <template>
@@ -175,6 +140,13 @@ function toggleBoundary() {
     <!-- Zoning Layer (Joann's existing layer) -->
     <ZoningLayer v-if="map" :map="map" :visible="showZoning" />
 
+    <!-- Gentrification Tracts Layer (outlines from UDP map) -->
+    <GentrificationTractsLayer
+      v-if="map"
+      :map="map"
+      :visible="showGentrificationTracts"
+    />
+
     <!-- Commercial Buildings WITH Price Data -->
     <BuildingsWithPricesLayer
       v-if="map"
@@ -183,7 +155,11 @@ function toggleBoundary() {
     />
 
     <!-- Combined Legend (replaces separate legends) -->
-    <Legend :show-zoning="showZoning" :show-price="showPriceBuildings" />
+    <Legend
+      :show-zoning="showZoning"
+      :show-price="showPriceBuildings"
+      :show-gentrification="showGentrificationTracts"
+    />
 
     <!-- Layer Controls -->
     <div class="layer-controls">
@@ -193,16 +169,12 @@ function toggleBoundary() {
         <span>Show Zoning</span>
       </label>
       <label class="layer-toggle">
-        <input type="checkbox" v-model="showPriceBuildings" />
-        <span>Commercial Buildings</span>
+        <input type="checkbox" v-model="showGentrificationTracts" />
+        <span>Gentrification Tracts</span>
       </label>
       <label class="layer-toggle">
-        <input
-          type="checkbox"
-          v-model="showBoundary"
-          @change="toggleBoundary"
-        />
-        <span>Show Boundary</span>
+        <input type="checkbox" v-model="showPriceBuildings" />
+        <span>Commercial Buildings</span>
       </label>
     </div>
 

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import L from "leaflet";
+import * as turf from "@turf/turf";
 
 const props = defineProps({
   map: {
@@ -13,12 +14,24 @@ const props = defineProps({
   },
 });
 
-// Simplified zoning color scheme - 2 categories only
-const categoryColors = {
-  "Single Family Residential": "#4A90E2", // Blue
-  "Multiple Family Residential": "#9B59B6", // Purple
-  "Residential Multiple Family": "#9B59B6", // Purple (alternate name)
-  default: null, // Will be filtered out
+// Blue gradient colors for Single Family Residential based on gentrification typology
+// Wider range gradient from very light to very dark blue for better distinction
+const typologyColors = {
+  "Stable Moderate/Mixed Income": "#E3F2FD", // Very light blue (almost white)
+  "Low-Income/Susceptible to Displacement": "#90CAF9", // Light blue
+  "Early/Ongoing Gentrification": "#42A5F5", // Medium-light blue
+  "Advanced Gentrification": "#1E88E5", // Medium blue
+  "Becoming Exclusive": "#0D47A1", // Very dark blue (darkest)
+};
+
+// Purple gradient colors for Multifamily Residential based on gentrification typology
+// Wider range gradient from very light to very dark purple for better distinction
+const multifamilyTypologyColors = {
+  "Stable Moderate/Mixed Income": "#F3E5F5", // Very light purple (almost white)
+  "Low-Income/Susceptible to Displacement": "#CE93D8", // Light purple
+  "Early/Ongoing Gentrification": "#AB47BC", // Medium-light purple
+  "Advanced Gentrification": "#7B1FA2", // Medium-dark purple
+  "Becoming Exclusive": "#4A148C", // Very dark purple (darkest)
 };
 
 // Mapping for display names
@@ -29,18 +42,8 @@ const categoryDisplayNames = {
 };
 
 let zoningLayer = null;
-
-// Function to get color based on category
-function getCategoryColor(properties) {
-  const category =
-    properties.CATEGORY ||
-    properties.category ||
-    properties.ZONE_CLASS ||
-    properties.zone_class ||
-    "";
-
-  return categoryColors[category] || categoryColors["default"];
-}
+let gentrificationTracts = null;
+let zoningTypologyMap = new Map(); // Maps zone feature IDs to typology
 
 // Function to get display name for category
 function getDisplayName(properties) {
@@ -54,11 +57,88 @@ function getDisplayName(properties) {
   return categoryDisplayNames[category] || category;
 }
 
+// Function to get the gentrification typology for a zoning feature
+function getTypologyForZone(zoneFeature) {
+  if (zoningTypologyMap.has(zoneFeature.properties)) {
+    return zoningTypologyMap.get(zoneFeature.properties);
+  }
+  return null;
+}
+
+// Function to find the gentrification tract that a zone intersects with
+function findIntersectingTract(zoneFeature) {
+  if (!gentrificationTracts || gentrificationTracts.features.length === 0) {
+    return null;
+  }
+
+  let bestMatch = null;
+  let maxIntersectionArea = 0;
+
+  for (const tract of gentrificationTracts.features) {
+    try {
+      // First, try to get the intersection polygon
+      const intersection = turf.intersect(zoneFeature, tract);
+      if (intersection) {
+        const intersectionArea = turf.area(intersection);
+        if (intersectionArea > maxIntersectionArea) {
+          maxIntersectionArea = intersectionArea;
+          bestMatch = tract;
+        }
+      }
+    } catch (e) {
+      // If intersection fails, try using the centroid of the zone to see if it's inside the tract
+      try {
+        const zoneCentroid = turf.centroid(zoneFeature);
+        if (turf.booleanPointInPolygon(zoneCentroid, tract)) {
+          const zoneArea = turf.area(zoneFeature);
+          if (zoneArea > maxIntersectionArea) {
+            maxIntersectionArea = zoneArea;
+            bestMatch = tract;
+          }
+        }
+      } catch (e2) {
+        // Skip this tract if we can't check it
+        continue;
+      }
+    }
+  }
+
+  return bestMatch;
+}
+
 // Style function for the zoning layer
 function zoningStyle(feature) {
+  const category =
+    feature.properties.CATEGORY ||
+    feature.properties.category ||
+    feature.properties.ZONE_CLASS ||
+    feature.properties.zone_class ||
+    "";
+
+  let fillColor;
+
+  if (category === "Single Family Residential") {
+    // Get typology for this zone
+    const typology = getTypologyForZone(feature);
+    fillColor = typology && typologyColors[typology]
+      ? typologyColors[typology]
+      : "#E3F2FD"; // Default to lightest blue if no typology found
+  } else if (
+    category === "Multiple Family Residential" ||
+    category === "Residential Multiple Family"
+  ) {
+    // Get typology for this zone
+    const typology = getTypologyForZone(feature);
+    fillColor = typology && multifamilyTypologyColors[typology]
+      ? multifamilyTypologyColors[typology]
+      : "#F3E5F5"; // Default to lightest purple if no typology found
+  } else {
+    fillColor = null;
+  }
+
   return {
-    fillColor: getCategoryColor(feature.properties),
-    fillOpacity: 0.65,
+    fillColor: fillColor,
+    fillOpacity: 0.9, // Higher opacity for more saturation/visibility
     color: "#333",
     weight: 0.5,
     opacity: 0.8,
@@ -85,6 +165,16 @@ function createPopupContent(properties) {
     `;
   }
 
+  // Add gentrification typology if available
+  const typology = properties._gentrificationTypology;
+  if (typology) {
+    popupHtml += `
+      <br><br>
+      <strong style="font-size: 12px; color: #666;">Gentrification Typology:</strong><br>
+      <span style="font-size: 11px; color: #666;">${typology}</span>
+    `;
+  }
+
   popupHtml += `</div>`;
 
   return popupHtml;
@@ -98,9 +188,10 @@ function onEachFeature(feature, layer) {
     mouseover: function (e) {
       const layer = e.target;
       layer.setStyle({
-        weight: 2,
+        color: "#000000", // Black outline on hover
+        weight: 3, // Thicker outline
         opacity: 1,
-        fillOpacity: 0.85,
+        fillOpacity: 0.9, // Keep the same fill opacity as default
       });
       layer.bringToFront();
     },
@@ -110,8 +201,86 @@ function onEachFeature(feature, layer) {
   });
 }
 
+// Load gentrification tract data
+async function loadGentrificationTracts() {
+  try {
+    const response = await fetch("/highland_park_gentrification_tracts.geojson");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    gentrificationTracts = await response.json();
+
+    // Filter out excluded tracts (same as in GentrificationTractsLayer)
+    const excludedTracts = [
+      "6037185202",
+      "6037183702",
+      "6037181600",
+      "6037480600",
+      "6037463800",
+      "6037199300",
+      "6037181500",
+      "6037199000",
+    ];
+
+    gentrificationTracts.features = gentrificationTracts.features.filter(
+      (feature) => {
+        const tractId = feature.properties.tract_id || "";
+        return !excludedTracts.includes(tractId);
+      }
+    );
+
+    console.log(
+      `✅ Loaded ${gentrificationTracts.features.length} gentrification tracts for zoning overlay`
+    );
+    return true;
+  } catch (error) {
+    console.error("Error loading gentrification tracts:", error);
+    return false;
+  }
+}
+
+// Map zoning features to gentrification typologies
+function mapZoningToGentrification(zoningData) {
+  zoningTypologyMap.clear();
+
+  if (!gentrificationTracts || gentrificationTracts.features.length === 0) {
+    console.warn("No gentrification tracts available for mapping");
+    return;
+  }
+
+  let mappedCount = 0;
+
+  for (const zoneFeature of zoningData.features) {
+    const category =
+      zoneFeature.properties.CATEGORY ||
+      zoneFeature.properties.category ||
+      "";
+
+    if (
+      category === "Single Family Residential" ||
+      category === "Multiple Family Residential" ||
+      category === "Residential Multiple Family"
+    ) {
+      const intersectingTract = findIntersectingTract(zoneFeature);
+      if (intersectingTract && intersectingTract.properties.typology) {
+        const typology = intersectingTract.properties.typology;
+        zoningTypologyMap.set(zoneFeature.properties, typology);
+        zoneFeature.properties._gentrificationTypology = typology;
+        mappedCount++;
+      }
+    }
+  }
+
+  console.log(
+    `🗺️  Mapped ${mappedCount} residential zones (Single Family & Multifamily) to gentrification typologies`
+  );
+}
+
 async function loadZoningData() {
   try {
+    // First, load gentrification tracts
+    await loadGentrificationTracts();
+
     let response;
     const possibleFiles = [
       "/highland_park_zoning.geojson",
@@ -156,6 +325,9 @@ async function loadZoningData() {
     const filtered = originalCount - zoningData.features.length;
     console.log(`   Filtered out ${filtered} zones (showing only residential)`);
 
+    // Map Single Family Residential zones to gentrification typologies
+    mapZoningToGentrification(zoningData);
+
     if (zoningData.features && zoningData.features.length > 0) {
       console.log(
         "Sample zoning feature properties:",
@@ -187,14 +359,21 @@ async function loadZoningData() {
 watch(
   () => props.visible,
   (visible) => {
-    if (zoningLayer) {
+    if (zoningLayer && props.map) {
       if (visible) {
-        zoningLayer.addTo(props.map);
+        // Check if layer is already on the map before adding
+        if (!props.map.hasLayer(zoningLayer)) {
+          zoningLayer.addTo(props.map);
+        }
       } else {
-        props.map.removeLayer(zoningLayer);
+        // Check if layer is on the map before removing
+        if (props.map.hasLayer(zoningLayer)) {
+          props.map.removeLayer(zoningLayer);
+        }
       }
     }
-  }
+  },
+  { immediate: false }
 );
 
 onMounted(() => {

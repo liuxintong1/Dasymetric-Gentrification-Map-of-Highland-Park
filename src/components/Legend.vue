@@ -8,12 +8,28 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  showGentrification: {
+    type: Boolean,
+    default: true,
+  },
 });
 
-// Zoning legend items
-const zoningItems = [
-  { name: "Single Family Residential", color: "#4A90E2" },
-  { name: "Multifamily Residential", color: "#9B59B6" },
+// Blue gradient for Single Family Residential - wider range for better distinction
+const singleFamilyGradient = [
+  { typology: "Stable Moderate/Mixed Income", color: "#E3F2FD" },
+  { typology: "Low-Income/Susceptible to Displacement", color: "#90CAF9" },
+  { typology: "Early/Ongoing Gentrification", color: "#42A5F5" },
+  { typology: "Advanced Gentrification", color: "#1E88E5" },
+  { typology: "Becoming Exclusive", color: "#0D47A1" },
+];
+
+// Purple gradient for Multifamily Residential - wider range for better distinction
+const multifamilyGradient = [
+  { typology: "Stable Moderate/Mixed Income", color: "#F3E5F5" },
+  { typology: "Low-Income/Susceptible to Displacement", color: "#CE93D8" },
+  { typology: "Early/Ongoing Gentrification", color: "#AB47BC" },
+  { typology: "Advanced Gentrification", color: "#7B1FA2" },
+  { typology: "Becoming Exclusive", color: "#4A148C" },
 ];
 
 // Price legend items
@@ -24,18 +40,59 @@ const priceItems = [
   { level: 4, price: "$$$$", color: "#F44336", label: "Very Expensive" },
   { level: null, price: "N/A", color: "#cccccc", label: "No price data" },
 ];
+
+// Gentrification typology legend items - only showing typologies that exist in the filtered data
+const gentrificationItems = [
+  { name: "Low-Income/Susceptible to Displacement", color: "#87CEFA" },
+  { name: "Early/Ongoing Gentrification", color: "#756BB1" },
+  { name: "Advanced Gentrification", color: "#54278F" },
+  { name: "Stable Moderate/Mixed Income", color: "#FBEDE0" },
+  { name: "Becoming Exclusive", color: "#EE924F" },
+];
 </script>
 
 <template>
-  <div v-if="showZoning || showPrice" class="combined-legend">
-    <!-- Zoning Section -->
-    <div v-if="showZoning" class="legend-section">
-      <h4>Zoning</h4>
+  <!-- Zoning Legend - Right Side -->
+  <div v-if="showZoning" class="zoning-legend">
+    <!-- Zoning Section - Single Family Residential Gradient -->
+    <div class="legend-section">
+      <h4>Zoning - Single Family Residential</h4>
       <div class="legend-items">
-        <div v-for="item in zoningItems" :key="item.name" class="legend-item">
+        <div v-for="item in singleFamilyGradient" :key="item.typology" class="legend-item">
           <div
             class="legend-color"
             :style="{ backgroundColor: item.color }"
+          ></div>
+          <span class="legend-label">{{ item.typology }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zoning Section - Multifamily Residential Gradient -->
+    <div class="legend-section">
+      <h4>Zoning - Multifamily Residential</h4>
+      <div class="legend-items">
+        <div v-for="item in multifamilyGradient" :key="item.typology" class="legend-item">
+          <div
+            class="legend-color"
+            :style="{ backgroundColor: item.color }"
+          ></div>
+          <span class="legend-label">{{ item.typology }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other Legends - Left Side -->
+  <div v-if="showPrice || showGentrification" class="other-legend">
+    <!-- Gentrification Typology Section -->
+    <div v-if="showGentrification" class="legend-section">
+      <h4>Displacement Typology</h4>
+      <div class="legend-items">
+        <div v-for="item in gentrificationItems" :key="item.name" class="legend-item">
+          <div
+            class="legend-color legend-color-outline"
+            :style="{ borderColor: item.color, backgroundColor: 'transparent' }"
           ></div>
           <span class="legend-label">{{ item.name }}</span>
         </div>
@@ -43,7 +100,7 @@ const priceItems = [
     </div>
 
     <!-- Divider -->
-    <hr v-if="showZoning && showPrice" class="legend-divider" />
+    <hr v-if="showGentrification && showPrice" class="legend-divider" />
 
     <!-- Price Section -->
     <div v-if="showPrice" class="legend-section">
@@ -68,7 +125,22 @@ const priceItems = [
 </template>
 
 <style scoped>
-.combined-legend {
+/* Zoning Legend - Right Side */
+.zoning-legend {
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  min-width: 220px;
+  max-width: 280px;
+}
+
+/* Other Legends - Left Side */
+.other-legend {
   position: absolute;
   bottom: 80px;
   left: 20px;
@@ -120,6 +192,11 @@ const priceItems = [
   border-radius: 4px;
   border: 1px solid #666;
   flex-shrink: 0;
+}
+
+.legend-color-outline {
+  border-width: 2px;
+  background-color: transparent !important;
 }
 
 .legend-label {
