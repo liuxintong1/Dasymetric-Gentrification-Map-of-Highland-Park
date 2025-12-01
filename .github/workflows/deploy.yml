@@ -41,7 +41,7 @@ jobs:
           NODE_ENV: production
           # Update VITE_BASE_PATH to match your repository name
           # For example: VITE_BASE_PATH: '/your-repo-name/'
-          VITE_BASE_PATH: '/project-team13/'
+          VITE_BASE_PATH: '/project-team13-Xintong/'
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
