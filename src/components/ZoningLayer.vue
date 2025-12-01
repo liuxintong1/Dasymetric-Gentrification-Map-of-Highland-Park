@@ -15,22 +15,22 @@ const props = defineProps({
 });
 
 // Blue gradient colors for Single Family Residential based on gentrification typology
-// Wider range gradient from very light to very dark blue for better distinction
+// Reordered: light to dark gradient
 const typologyColors = {
-  "Stable Moderate/Mixed Income": "#E3F2FD", // Very light blue (almost white)
-  "Low-Income/Susceptible to Displacement": "#90CAF9", // Light blue
-  "Early/Ongoing Gentrification": "#42A5F5", // Medium-light blue
-  "Advanced Gentrification": "#1E88E5", // Medium blue
+  "Low-Income/Susceptible to Displacement": "#E3F2FD", // Very light blue (lightest)
+  "Early/Ongoing Gentrification": "#90CAF9", // Light blue
+  "Advanced Gentrification": "#42A5F5", // Medium-light blue
+  "Stable Moderate/Mixed Income": "#1E88E5", // Medium blue
   "Becoming Exclusive": "#0D47A1", // Very dark blue (darkest)
 };
 
 // Purple gradient colors for Multifamily Residential based on gentrification typology
-// Wider range gradient from very light to very dark purple for better distinction
+// Reordered: light to dark gradient
 const multifamilyTypologyColors = {
-  "Stable Moderate/Mixed Income": "#F3E5F5", // Very light purple (almost white)
-  "Low-Income/Susceptible to Displacement": "#CE93D8", // Light purple
-  "Early/Ongoing Gentrification": "#AB47BC", // Medium-light purple
-  "Advanced Gentrification": "#7B1FA2", // Medium-dark purple
+  "Low-Income/Susceptible to Displacement": "#F3E5F5", // Very light purple (lightest)
+  "Early/Ongoing Gentrification": "#CE93D8", // Light purple
+  "Advanced Gentrification": "#AB47BC", // Medium-light purple
+  "Stable Moderate/Mixed Income": "#7B1FA2", // Medium-dark purple
   "Becoming Exclusive": "#4A148C", // Very dark purple (darkest)
 };
 
@@ -221,6 +221,7 @@ async function loadGentrificationTracts() {
       "6037199300",
       "6037181500",
       "6037199000",
+      "6037186201",
     ];
 
     gentrificationTracts.features = gentrificationTracts.features.filter(
