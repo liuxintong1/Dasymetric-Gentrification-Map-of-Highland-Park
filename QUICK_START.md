@@ -28,7 +28,7 @@ Edit `.github/workflows/deploy.yml`:
 
 1. Go to your repository → **Settings** → **Pages**
 2. Under **Source**, select **"GitHub Actions"**
-3. Click **Save**
+3. Click **Static HTML option**
 4. Check **Actions** tab - deployment will run automatically
 
 **Your site will be live at**: `https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/`
