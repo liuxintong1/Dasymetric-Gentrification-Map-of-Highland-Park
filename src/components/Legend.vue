@@ -41,13 +41,13 @@ const priceItems = [
   { level: null, price: "N/A", color: "#cccccc", label: "No price data" },
 ];
 
-// Gentrification typology legend items - only showing typologies that exist in the filtered data
+// Gentrification typology legend items - green-to-red gradient
 const gentrificationItems = [
-  { name: "Low-Income/Susceptible to Displacement", color: "#87CEFA" },
-  { name: "Early/Ongoing Gentrification", color: "#756BB1" },
-  { name: "Advanced Gentrification", color: "#54278F" },
-  { name: "Stable Moderate/Mixed Income", color: "#FBEDE0" },
-  { name: "Becoming Exclusive", color: "#EE924F" },
+  { name: "Low-Income/Susceptible to Displacement", color: "#2E7D32" }, // Dark Green
+  { name: "Early/Ongoing Gentrification", color: "#689F38" }, // Light Green
+  { name: "Advanced Gentrification", color: "#FBC02D" }, // Amber Yellow
+  { name: "Stable Moderate/Mixed Income", color: "#F57C00" }, // Orange
+  { name: "Becoming Exclusive", color: "#C62828" }, // Dark Red
 ];
 </script>
 

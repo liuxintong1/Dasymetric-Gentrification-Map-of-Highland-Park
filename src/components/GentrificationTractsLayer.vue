@@ -15,14 +15,25 @@ const props = defineProps({
 
 let tractsLayer = null;
 
+// Green-to-red gradient colors for gentrification tract outlines
+const tractOutlineColors = {
+  "Low-Income/Susceptible to Displacement": "#2E7D32", // Dark Green
+  "Early/Ongoing Gentrification": "#689F38", // Light Green
+  "Advanced Gentrification": "#FBC02D", // Amber Yellow
+  "Stable Moderate/Mixed Income": "#F57C00", // Orange
+  "Becoming Exclusive": "#C62828", // Dark Red
+};
+
 // Style function for tracts - outlines only
 function tractStyle(feature) {
-  const color = feature.properties.color || "#333333";
+  const typology = feature.properties.typology || "";
+  // Use the typology-based color, or fallback to the original color property
+  const color = tractOutlineColors[typology] || feature.properties.color || "#333333";
   return {
     fillColor: color,
     fillOpacity: 0, // No fill, just outlines
     color: color,
-    weight: 2, // Line width for outlines
+    weight: 3, // Line width for outlines (thicker)
     opacity: 0.8,
   };
 }
@@ -59,7 +70,7 @@ function onEachFeature(feature, layer) {
     mouseover: function (e) {
       const layer = e.target;
       layer.setStyle({
-        weight: 3,
+        weight: 5, // Even thicker on hover
         opacity: 1,
       });
       layer.bringToFront();
