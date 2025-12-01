@@ -14,21 +14,21 @@ const props = defineProps({
   },
 });
 
-// Blue gradient for Single Family Residential - wider range for better distinction
+// Blue gradient for Single Family Residential - reordered: light to dark
 const singleFamilyGradient = [
-  { typology: "Stable Moderate/Mixed Income", color: "#E3F2FD" },
-  { typology: "Low-Income/Susceptible to Displacement", color: "#90CAF9" },
-  { typology: "Early/Ongoing Gentrification", color: "#42A5F5" },
-  { typology: "Advanced Gentrification", color: "#1E88E5" },
+  { typology: "Low-Income/Susceptible to Displacement", color: "#E3F2FD" },
+  { typology: "Early/Ongoing Gentrification", color: "#90CAF9" },
+  { typology: "Advanced Gentrification", color: "#42A5F5" },
+  { typology: "Stable Moderate/Mixed Income", color: "#1E88E5" },
   { typology: "Becoming Exclusive", color: "#0D47A1" },
 ];
 
-// Purple gradient for Multifamily Residential - wider range for better distinction
+// Purple gradient for Multifamily Residential - reordered: light to dark
 const multifamilyGradient = [
-  { typology: "Stable Moderate/Mixed Income", color: "#F3E5F5" },
-  { typology: "Low-Income/Susceptible to Displacement", color: "#CE93D8" },
-  { typology: "Early/Ongoing Gentrification", color: "#AB47BC" },
-  { typology: "Advanced Gentrification", color: "#7B1FA2" },
+  { typology: "Low-Income/Susceptible to Displacement", color: "#F3E5F5" },
+  { typology: "Early/Ongoing Gentrification", color: "#CE93D8" },
+  { typology: "Advanced Gentrification", color: "#AB47BC" },
+  { typology: "Stable Moderate/Mixed Income", color: "#7B1FA2" },
   { typology: "Becoming Exclusive", color: "#4A148C" },
 ];
 
