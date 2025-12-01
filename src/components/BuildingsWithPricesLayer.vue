@@ -123,8 +123,9 @@ async function loadBuildingData() {
   try {
     console.log("💰 Loading commercial buildings WITH PRICE DATA...");
 
+    const baseUrl = import.meta.env.BASE_URL;
     const response = await fetch(
-      "/highland_park_commercial_buildings_with_prices.geojson"
+      `${baseUrl}highland_park_commercial_buildings_with_prices.geojson`
     );
 
     if (!response.ok) {

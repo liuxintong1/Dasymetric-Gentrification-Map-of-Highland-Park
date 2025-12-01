@@ -35,7 +35,8 @@ onMounted(async () => {
 
   try {
     // Load Highland Park boundary only
-    const response = await fetch("/highland_park_only.geojson");
+    const baseUrl = import.meta.env.BASE_URL;
+    const response = await fetch(`${baseUrl}highland_park_only.geojson`);
     const highlandParkData = await response.json();
 
     // Get the bounds from Highland Park (using temporary layer for bounds calculation)

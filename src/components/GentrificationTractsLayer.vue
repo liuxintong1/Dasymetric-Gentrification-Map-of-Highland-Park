@@ -72,7 +72,8 @@ function onEachFeature(feature, layer) {
 
 async function loadTractData() {
   try {
-    const response = await fetch("/highland_park_gentrification_tracts.geojson");
+    const baseUrl = import.meta.env.BASE_URL;
+    const response = await fetch(`${baseUrl}highland_park_gentrification_tracts.geojson`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
