@@ -204,7 +204,8 @@ function onEachFeature(feature, layer) {
 // Load gentrification tract data
 async function loadGentrificationTracts() {
   try {
-    const response = await fetch("/highland_park_gentrification_tracts.geojson");
+    const baseUrl = import.meta.env.BASE_URL;
+    const response = await fetch(`${baseUrl}highland_park_gentrification_tracts.geojson`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -282,11 +283,12 @@ async function loadZoningData() {
     await loadGentrificationTracts();
 
     let response;
+    const baseUrl = import.meta.env.BASE_URL;
     const possibleFiles = [
-      "/highland_park_zoning.geojson",
-      "/highland_park_zoning.json",
-      "/la_zoning_highland_park.geojson",
-      "/zoning.geojson",
+      `${baseUrl}highland_park_zoning.geojson`,
+      `${baseUrl}highland_park_zoning.json`,
+      `${baseUrl}la_zoning_highland_park.geojson`,
+      `${baseUrl}zoning.geojson`,
     ];
 
     let zoningData = null;
