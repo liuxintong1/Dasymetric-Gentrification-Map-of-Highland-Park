@@ -2,6 +2,13 @@
 
 Interactive map visualization showing gentrification data, zoning information, and commercial building prices for Highland Park, Los Angeles.
 
+## ARTIFACTS
+
+- [Deployed Demonstration URL](<https://liuxintong1.github.io/project-team13-Xintong/>)
+- [Presentation URL](<https://docs.google.com/presentation/d/1ceEStOKkNP97p2ssyf2C8tdZrUhl2x8k3xslLkWmUAI/edit?usp=sharing>)
+- [Paper PDF](<https://drive.google.com/file/d/1LdVKNgYPaZ_TVotU9ONU9ozrxqibOdMh/view?usp=sharing>) and [Paper Overleaf URL](<https://www.overleaf.com/read/jndfrqwqrjbn#34e5dc>)
+- [YouTube video Link](<https://youtu.be/x0_6Q_OOnRM>)
+
 ## 🚀 Deployment
 
 **⚠️ Important**: This repository has restrictions. To deploy, **copy this project to your own GitHub repository** and follow the deployment guide.
@@ -96,5 +103,5 @@ project-team13/
 
 ## 📄 License
 
-This project is part of a DSCI 554 course assignment.
+This project is part of a DSCI 554 course final project.
 
