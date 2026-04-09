@@ -103,7 +103,7 @@ Dasymetric-Gentrification-Map-of-Highland-Park/
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **[Urban Displacement Project, 2021](https://www.urbandisplacement.org/maps/los-angeles-gentrification-and-displacement/)**                                                                               | Census tract–level displacement typology for Los Angeles County.                                                                                                               |
 | **[Residential zoning](https://geohub.lacity.org/datasets/f2b84d74972a4084aac79fbe504d9b11_15/explore?location=34.084007%2C-118.186365%2C15)**                                                            | Parcel-level zoning used to separate single-family vs. multifamily residential areas.                                                                                          |
-| **[Building footprints](https://geohub.lacity.org/datasets/813fcefde1f64b209103107b26a8909f_0/explore?location=34.018387%2C-118.410168%2C10) and business price level** (LA City GeoHub; Yelp Fusion API) | Commercial building geometries from the city; each building linked to a price-level indicator derived from Yelp Fusion to approximate how expensive associated businesses are. |
+| **[Building footprints](https://geohub.lacity.org/datasets/813fcefde1f64b209103107b26a8909f_0/explore?location=34.018387%2C-118.410168%2C10) and business price level** | Commercial building geometries from the city; each building linked to a price-level indicator derived from Yelp Fusion to approximate how expensive associated businesses are. |
 | **[Neighborhood boundary](https://geohub.lacity.org/datasets/d6c55385a0e749519f238b77135eafac_0/explore?location=34.020728%2C-118.410084%2C10/)**                                                         | Highland Park polygon from LA Times neighborhood boundaries.                                                                                                                   |
 
 
@@ -115,7 +115,7 @@ If you use this work in your research, please cite:
 
 ```bibtex
 @software{liu_2026_dasymetric,
-  author    = {Liu, Xintong and Nava, Omar and Cheng, Chi-Fang and Xue, YuanYuan},
+  author    = {Nava, Omar and Liu, Xintong and Cheng, Chi-Fang and Xue, YuanYuan},
   title     = {Dasymetric Disaggregation of Gentrification Typologies},
   year      = {2026},
   publisher = {Zenodo},
