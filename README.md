@@ -111,7 +111,17 @@ Dasymetric-Gentrification-Map-of-Highland-Park/
 
 If you use this work in your research, please cite:
 
-> *(Add your preferred citation: course report, Zenodo DOI, or proceedings entry when available.)*
+**BibTeX**
+
+```bibtex
+@software{liu_2026_dasymetric,
+  author    = {Liu, Xintong and Nava, Omar and Cheng, Chi-Fang and Xue, YuanYuan},
+  title     = {Dasymetric Disaggregation of Gentrification Typologies},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.19479471}
+}
+```
 
 ## Authors
 
