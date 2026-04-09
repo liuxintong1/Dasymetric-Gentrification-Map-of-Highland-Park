@@ -2,7 +2,7 @@
 
 Interactive map visualization showing gentrification typology, residential zoning, and business price level indicators for Highland Park, Los Angeles.
 
-[Live Demo]([https://liuxintong1.github.io/project-team13-Xintong/](https://liuxintong1.github.io/project-team13-Xintong/)) | [Video](https://www.youtube.com/watch?v=x0_6Q_OOnRM)
+[Live Demo](https://liuxintong1.github.io/project-team13-Xintong/) | [Video](https://www.youtube.com/watch?v=x0_6Q_OOnRM)
 
 ## Overview
 
@@ -57,13 +57,13 @@ npm run preview
 
 ## Project structure
 
-The **Vue** app lives under `src/`: `main.js` bootstraps the app, `App.vue` wraps the layout, and `GentrificationMap.vue` owns the Leaflet instance, max-bounds to Highland Park, and the layer checkboxes. Each major map concern is a child component (`ZoningLayer`, `GentrificationTractsLayer`, `BuildingsWithPricesLayer`, `Legend`). Global map styling is in `src/assets/map.css`.
+The **Vue** app lives under `src/`: `main.js` bootstraps the app, `App.vue` wraps the layout, and `GentrificationMap.vue` owns the Leaflet instance.
 
-`**public/`** holds GeoJSON (and any other static files) loaded at runtime via `fetch` and `import.meta.env.BASE_URL`—for example the neighborhood mask, zoning-derived features, tract outlines, and commercial buildings with price attributes. These files are copied as-is into the production build.
+**public/** holds GeoJSON (and any other static files) loaded at runtime.
 
-`**scripts/**` contains Python utilities used to prepare or enrich data (e.g., clipping tracts, Yelp-related helpers); they are not executed by the web app itself.
+**scripts/** contains Python utilities used to prepare or enrich data (e.g., clipping tracts, Yelp-related helpers); they are not executed by the web app itself.
 
-`**highland-park/**` stores reference materials from the Urban Displacement Project–style workflow (e.g., standalone HTML exports) and extra GeoJSON copies; the interactive app primarily relies on the curated files under `public/`.
+**highland-park/** stores reference materials from the Urban Displacement Project–style workflow (e.g., standalone HTML exports) and extra GeoJSON copies; the interactive app primarily relies on the curated files under `public/`.
 
 ```
 Dasymetric-Gentrification-Map-of-Highland-Park/
