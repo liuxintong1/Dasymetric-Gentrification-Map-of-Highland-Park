@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import L from "leaflet";
-import * as d3 from "d3";
 import ZoningLayer from "./ZoningLayer.vue";
 import BuildingsWithPricesLayer from "./BuildingsWithPricesLayer.vue";
 import GentrificationTractsLayer from "./GentrificationTractsLayer.vue";
@@ -49,81 +48,6 @@ onMounted(async () => {
 
     // Fit the map perfectly to Highland Park
     map.value.fitBounds(bounds, { padding: [20, 20] });
-
-    // Create SVG overlay for masking everything outside Highland Park
-    const svg = d3
-      .select(map.value.getPanes().overlayPane)
-      .append("svg")
-      .attr("class", "highland-park-mask")
-      .style("position", "absolute")
-      .style("top", 0)
-      .style("left", 0)
-      .style("pointer-events", "none");
-
-    const g = svg.append("g").attr("class", "leaflet-zoom-hide");
-
-    // Function to update the mask on zoom/pan
-    function updateMask() {
-      const mapBounds = map.value.getBounds();
-      const topLeft = map.value.latLngToLayerPoint(mapBounds.getNorthWest());
-      const bottomRight = map.value.latLngToLayerPoint(
-        mapBounds.getSouthEast()
-      );
-
-      svg
-        .attr("width", bottomRight.x - topLeft.x)
-        .attr("height", bottomRight.y - topLeft.y)
-        .style("left", topLeft.x + "px")
-        .style("top", topLeft.y + "px");
-
-      g.attr("transform", `translate(${-topLeft.x},${-topLeft.y})`);
-
-      // Create the path projection
-      const geoPath = d3.geoPath().projection(
-        d3.geoTransform({
-          point: function (lng, lat) {
-            const point = map.value.latLngToLayerPoint(new L.LatLng(lat, lng));
-            this.stream.point(point.x, point.y);
-          },
-        })
-      );
-
-      // Clear existing paths
-      g.selectAll("path").remove();
-
-      // Get map pixel bounds for creating outer rectangle
-      const pixelBounds = map.value.getPixelBounds();
-      const padding = 5000;
-
-      // Create coordinates for outer world rectangle
-      const outerCoords = [
-        [pixelBounds.min.x - padding, pixelBounds.min.y - padding],
-        [pixelBounds.max.x + padding, pixelBounds.min.y - padding],
-        [pixelBounds.max.x + padding, pixelBounds.max.y + padding],
-        [pixelBounds.min.x - padding, pixelBounds.max.y + padding],
-      ].map((p) => {
-        const latlng = map.value.layerPointToLatLng(L.point(p[0], p[1]));
-        return [latlng.lng, latlng.lat];
-      });
-
-      // Draw outer rectangle with VERY OPAQUE GRAY to completely hide outside
-      g.append("path")
-        .datum({
-          type: "Feature",
-          geometry: {
-            type: "Polygon",
-            coordinates: [outerCoords],
-          },
-        })
-        .attr("d", geoPath)
-        .attr("fill", "#8a8a8a") // Medium-dark gray
-        .attr("fill-opacity", 0.97) // Almost solid - hides everything
-        .attr("class", "outer-mask");
-    }
-
-    // Update mask on map move/zoom
-    map.value.on("moveend zoom", updateMask);
-    updateMask();
   } catch (error) {
     console.error("Error loading Highland Park:", error);
     alert(
@@ -264,10 +188,6 @@ onMounted(async () => {
   font-weight: 400;
   color: #5a6c7d;
   margin-top: 4px !important;
-}
-
-:deep(.highland-park-mask) {
-  z-index: 400;
 }
 
 :deep(.leaflet-control-container) {
