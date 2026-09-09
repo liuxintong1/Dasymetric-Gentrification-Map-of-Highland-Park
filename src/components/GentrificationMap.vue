@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import L from "leaflet";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import ZoningLayer from "./ZoningLayer.vue";
 import BuildingsWithPricesLayer from "./BuildingsWithPricesLayer.vue";
 import GentrificationTractsLayer from "./GentrificationTractsLayer.vue";
@@ -12,6 +15,13 @@ const map = ref(null);
 const showZoning = ref(true);
 const showPriceBuildings = ref(true);
 const showGentrificationTracts = ref(true);
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 // Initialize the Leaflet map on component mount
 onMounted(async () => {

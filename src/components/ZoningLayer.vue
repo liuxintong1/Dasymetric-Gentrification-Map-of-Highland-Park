@@ -283,34 +283,16 @@ async function loadZoningData() {
     // First, load gentrification tracts
     await loadGentrificationTracts();
 
-    let response;
     const baseUrl = import.meta.env.BASE_URL;
-    const possibleFiles = [
-      `${baseUrl}highland_park_zoning.geojson`,
-      `${baseUrl}highland_park_zoning.json`,
-      `${baseUrl}la_zoning_highland_park.geojson`,
-      `${baseUrl}zoning.geojson`,
-    ];
-
-    let zoningData = null;
-    for (const file of possibleFiles) {
-      try {
-        response = await fetch(file);
-        if (response.ok) {
-          zoningData = await response.json();
-          console.log(`✅ Loaded zoning data from: ${file}`);
-          break;
-        }
-      } catch (e) {
-        // Continue to next file
-      }
-    }
-
-    if (!zoningData) {
+    const zoningUrl = `${baseUrl}highland_park_zoning.json`;
+    const response = await fetch(zoningUrl);
+    if (!response.ok) {
       throw new Error(
-        "Could not find zoning data file. Tried: " + possibleFiles.join(", ")
+        `Could not load zoning data from ${zoningUrl} (${response.status})`
       );
     }
+    const zoningData = await response.json();
+    console.log(`✅ Loaded zoning data from: ${zoningUrl}`);
 
     // Filter to only show our 2 residential categories
     const originalCount = zoningData.features.length;
