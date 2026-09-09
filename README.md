@@ -2,7 +2,7 @@
 
 Interactive map visualization showing gentrification typology, residential zoning, and business price level indicators for Highland Park, Los Angeles.
 
-[Live Demo](https://liuxintong1.github.io/project-team13-Xintong/) | [Video](https://www.youtube.com/watch?v=x0_6Q_OOnRM)
+[Live Demo](https://liuxintong1.github.io/Dasymetric-Gentrification-Map-of-Highland-Park/) | [Video](https://www.youtube.com/watch?v=x0_6Q_OOnRM)
 
 ## Overview
 
